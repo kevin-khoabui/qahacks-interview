@@ -1,0 +1,38 @@
+{
+  "name": "qahacks-interview",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply qahacks-interview-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply qahacks-interview-db --remote",
+    "db:seed:local": "wrangler d1 execute qahacks-interview-db --local --file=seed/001_initial_questions.sql",
+    "db:seed:remote": "wrangler d1 execute qahacks-interview-db --remote --file=seed/001_initial_questions.sql",
+    "generate:draft": "tsx scripts/generate-draft.ts",
+    "review:draft": "tsx scripts/review-draft.ts",
+    "publish": "tsx scripts/publish-question.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@opennextjs/cloudflare": "^1.20.0",
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260625.1",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tsx": "^4.22.4",
+    "typescript": "^5",
+    "wrangler": "^4.104.0"
+  }
+}

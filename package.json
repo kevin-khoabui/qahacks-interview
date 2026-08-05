@@ -21,6 +21,7 @@
     "review:draft": "tsx scripts/review-draft.ts",
     "list:review": "tsx scripts/list-review-articles.ts",
     "inspect:review": "tsx scripts/inspect-review-article.ts",
+    "patch:content": "tsx scripts/apply-content-patch.ts",
     "publish": "tsx scripts/publish-question.ts"
   },
   "dependencies": {

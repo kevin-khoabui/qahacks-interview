@@ -11,6 +11,7 @@ on:
           - migrate
           - seed-questions
           - seed-topics
+          - seed-100-briefs
           - setup-all
 
 permissions:
@@ -47,6 +48,10 @@ jobs:
         if: inputs.operation == 'seed-questions' || inputs.operation == 'setup-all'
         run: npm run db:seed:remote
 
-      - name: Seed curated topic queue
+      - name: Seed original starter topics
         if: inputs.operation == 'seed-topics' || inputs.operation == 'setup-all'
         run: npm run db:topics:remote
+
+      - name: Seed 100 curated topic briefs
+        if: inputs.operation == 'seed-100-briefs' || inputs.operation == 'setup-all'
+        run: npm run db:briefs:remote

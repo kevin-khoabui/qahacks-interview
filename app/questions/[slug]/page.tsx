@@ -5,6 +5,24 @@ import { getPublishedQuestion } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+function splitContent(value: string) {
+  return value
+    .replace(/\\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseBlueprint(value: string) {
+  return splitContent(value).map((item, index) => {
+    const match = item.match(/^\[([^\]]+)\]\s*(.*)$/s);
+    return {
+      label: match?.[1] ?? `Step ${index + 1}`,
+      text: match?.[2]?.trim() ?? item
+    };
+  });
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const question = await getPublishedQuestion(slug);
@@ -21,54 +39,107 @@ export default async function QuestionPage({ params }: { params: Promise<{ slug:
   const question = await getPublishedQuestion(slug);
   if (!question) notFound();
 
+  const expertParagraphs = splitContent(question.expert_answer);
+  const blueprint = parseBlueprint(question.speaking_blueprint);
+
   return (
     <main className="shell article">
       <article className="article-main">
-        <Link className="back" href="/">← Back to interview library</Link>
-        <div className="meta" style={{ marginTop: 28 }}>
-          <span className="pill">{question.level}</span>
-          <span className="pill">{question.role}</span>
-          <span className="pill">{question.category}</span>
-          {question.technology && <span className="pill">{question.technology}</span>}
-        </div>
-        <h1>{question.question}</h1>
-        <p className="lead">{question.excerpt}</p>
+        <nav className="breadcrumbs" aria-label="Breadcrumb">
+          <Link href="/">Interview library</Link>
+          <span>/</span>
+          <span>{question.role}</span>
+          <span>/</span>
+          <span>{question.category}</span>
+        </nav>
 
-        <section className="block" id="short-answer">
+        <header className="question-header">
+          <div className="meta">
+            <span className="pill">{question.level}</span>
+            <span className="pill">{question.role}</span>
+            {question.technology && <span className="pill">{question.technology}</span>}
+          </div>
+          <h1>{question.question}</h1>
+          <p className="lead">{question.excerpt}</p>
+          <div className="question-facts">
+            <div><span>Level</span><strong>{question.level}</strong></div>
+            <div><span>Track</span><strong>{question.role}</strong></div>
+            <div><span>Quality</span><strong>{question.quality_score}/100</strong></div>
+          </div>
+        </header>
+
+        <section className="answer-highlight" id="short-answer">
+          <div className="section-label">Best concise answer</div>
           <h2>Interview-ready answer</h2>
           <p>{question.short_answer}</p>
         </section>
 
-        <section className="block" id="expert-answer">
+        <section className="content-section" id="expert-answer">
+          <div className="section-label">Deep reasoning</div>
           <h2>Expert answer</h2>
-          {question.expert_answer.split("\n\n").map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          <div className="prose">
+            {expertParagraphs.map((paragraph, index) => <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>)}
+          </div>
         </section>
 
-        <section className="block" id="speaking-blueprint">
+        <section className="content-section" id="speaking-blueprint">
+          <div className="section-label">How to structure your response</div>
           <h2>Speaking blueprint</h2>
-          {question.speaking_blueprint.split("\n\n").map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+          <div className="blueprint-grid">
+            {blueprint.map((item, index) => (
+              <div className="blueprint-step" key={`${item.label}-${index}`}>
+                <div className="step-number">{String(index + 1).padStart(2, "0")}</div>
+                <div>
+                  <h3>{item.label}</h3>
+                  <p>{item.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
-        <section className="block" id="common-mistakes">
+        <section className="content-section" id="common-mistakes">
+          <div className="section-label">What weakens an answer</div>
           <h2>Common mistakes</h2>
-          <ul>{question.common_mistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul>
+          <div className="mistake-list">
+            {question.common_mistakes.map((mistake, index) => (
+              <div className="mistake-item" key={mistake}>
+                <span>{index + 1}</span>
+                <p>{mistake}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         {question.follow_up_questions.length > 0 && (
-          <section className="block" id="follow-ups">
+          <section className="content-section" id="follow-ups">
+            <div className="section-label">Prepare one level deeper</div>
             <h2>Likely follow-up questions</h2>
-            <ul>{question.follow_up_questions.map((item) => <li key={item}>{item}</li>)}</ul>
+            <div className="follow-up-list">
+              {question.follow_up_questions.map((item) => <div className="follow-up" key={item}><span>→</span><p>{item}</p></div>)}
+            </div>
           </section>
         )}
+
+        <div className="article-end">
+          <Link href="/">← Browse more interview questions</Link>
+        </div>
       </article>
 
       <aside className="aside">
-        <strong>On this page</strong>
-        <a href="#short-answer"><span>Interview-ready answer</span></a>
-        <a href="#expert-answer"><span>Expert answer</span></a>
-        <a href="#speaking-blueprint"><span>Speaking blueprint</span></a>
-        <a href="#common-mistakes"><span>Common mistakes</span></a>
-        <span>Quality score: {question.quality_score}/100</span>
+        <div className="aside-group">
+          <strong>On this page</strong>
+          <a href="#short-answer">Interview-ready answer</a>
+          <a href="#expert-answer">Expert answer</a>
+          <a href="#speaking-blueprint">Speaking blueprint</a>
+          <a href="#common-mistakes">Common mistakes</a>
+          {question.follow_up_questions.length > 0 && <a href="#follow-ups">Follow-up questions</a>}
+        </div>
+        <div className="aside-card">
+          <span>Question quality</span>
+          <strong>{question.quality_score}/100</strong>
+          <p>Curated for clarity, technical depth, and interview usefulness.</p>
+        </div>
       </aside>
     </main>
   );

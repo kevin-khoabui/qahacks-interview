@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FormattedContent } from "@/components/formatted-content";
 import { getPublishedQuestion } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,6 @@ export default async function QuestionPage({ params }: { params: Promise<{ slug:
   const question = await getPublishedQuestion(slug);
   if (!question) notFound();
 
-  const expertParagraphs = splitContent(question.expert_answer);
   const blueprint = parseBlueprint(question.speaking_blueprint);
 
   return (
@@ -49,7 +49,7 @@ export default async function QuestionPage({ params }: { params: Promise<{ slug:
           </div>
         </header>
 
-        <section className="answer-highlight" id="short-answer"><div className="section-label">Best concise answer</div><h2>Interview-ready answer</h2><p>{question.short_answer}</p></section>
+        <section className="answer-highlight" id="short-answer"><div className="section-label">Best concise answer</div><h2>Interview-ready answer</h2><FormattedContent value={question.short_answer} /></section>
 
         {question.interviewer_evaluates.length > 0 && (
           <section className="content-section" id="interviewer-evaluates">
@@ -58,13 +58,13 @@ export default async function QuestionPage({ params }: { params: Promise<{ slug:
           </section>
         )}
 
-        <section className="content-section" id="expert-answer"><div className="section-label">Deep reasoning</div><h2>Expert answer</h2><div className="prose">{expertParagraphs.map((paragraph, index) => <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>)}</div></section>
+        <section className="content-section" id="expert-answer"><div className="section-label">Deep reasoning</div><h2>Expert answer</h2><FormattedContent value={question.expert_answer} className="prose formatted-content" /></section>
 
         {question.real_world_example && (
-          <section className="content-section" id="example"><div className="section-label">Applied thinking</div><h2>Real-world example</h2><div className="example-card"><p>{question.real_world_example}</p></div></section>
+          <section className="content-section" id="example"><div className="section-label">Applied thinking</div><h2>Real-world example</h2><div className="example-card"><FormattedContent value={question.real_world_example} /></div></section>
         )}
 
-        <section className="content-section" id="speaking-blueprint"><div className="section-label">How to structure your response</div><h2>Speaking blueprint</h2><div className="blueprint-grid">{blueprint.map((item, index) => <div className="blueprint-step" key={`${item.label}-${index}`}><div className="step-number">{String(index + 1).padStart(2, "0")}</div><div><h3>{item.label}</h3><p>{item.text}</p></div></div>)}</div></section>
+        <section className="content-section" id="speaking-blueprint"><div className="section-label">How to structure your response</div><h2>Speaking blueprint</h2><div className="blueprint-grid">{blueprint.map((item, index) => <div className="blueprint-step" key={`${item.label}-${index}`}><div className="step-number">{String(index + 1).padStart(2, "0")}</div><div><h3>{item.label}</h3><FormattedContent value={item.text} /></div></div>)}</div></section>
 
         {question.strong_signals.length > 0 && (
           <section className="content-section" id="strong-signals"><div className="section-label">Senior-level indicators</div><h2>Strong answer signals</h2><div className="signal-grid">{question.strong_signals.map((item) => <div className="signal-item" key={item}><b>+</b><span>{item}</span></div>)}</div></section>

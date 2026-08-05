@@ -50,7 +50,6 @@ function main() {
     console.log(`   Score: ${row.quality_score}/100`);
     console.log(`   Recommendation: ${recommendation}`);
     console.log(`   Reviewed at: ${row.reviewed_at || "unknown"}`);
-    console.log(`   Preview: https://interview.qahacks.com/questions/${row.slug}`);
     console.log(`   Issues: ${issues.length ? issues.join(" | ") : "None reported"}`);
     console.log(`   Unsupported claims: ${unsupported.length ? unsupported.join(" | ") : "None reported"}`);
     console.log("");

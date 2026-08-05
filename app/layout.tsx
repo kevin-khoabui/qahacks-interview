@@ -28,9 +28,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </span>
           </Link>
           <nav className="nav" aria-label="Main navigation">
-            <Link href="/?role=Manual%20QA">Manual QA</Link>
-            <Link href="/?role=Automation%20QA">Automation QA</Link>
-            <Link href="/?role=QA%20Lead">QA Lead</Link>
+            <Link href="/?role=Manual%20QA#questions">Manual QA</Link>
+            <Link href="/?role=Automation%20QA#questions">Automation QA</Link>
+            <Link href="/?role=QA%20Lead#questions">QA Lead</Link>
             <a className="newsletter-link" href={newsletterUrl} target="_blank" rel="noopener noreferrer">Get QA Insights</a>
           </nav>
         </header>
@@ -65,9 +65,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div className="footer-links">
             <div>
               <strong>Interview Library</strong>
-              <Link href="/?role=Manual%20QA">Manual QA</Link>
-              <Link href="/?role=Automation%20QA">Automation QA</Link>
-              <Link href="/?role=QA%20Lead">QA Lead</Link>
+              <Link href="/?role=Manual%20QA#questions">Manual QA</Link>
+              <Link href="/?role=Automation%20QA#questions">Automation QA</Link>
+              <Link href="/?role=QA%20Lead#questions">QA Lead</Link>
             </div>
             <div>
               <strong>QA Hacks</strong>

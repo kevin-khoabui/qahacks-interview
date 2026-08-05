@@ -19,6 +19,8 @@
     "db:briefs:remote": "wrangler d1 execute qahacks-interview-db --remote --file=seed/003_topic_briefs_001_050.sql && wrangler d1 execute qahacks-interview-db --remote --file=seed/004_topic_briefs_051_100.sql",
     "generate:draft": "tsx scripts/generate-draft.ts",
     "review:draft": "tsx scripts/review-draft.ts",
+    "list:review": "tsx scripts/list-review-articles.ts",
+    "inspect:review": "tsx scripts/inspect-review-article.ts",
     "publish": "tsx scripts/publish-question.ts"
   },
   "dependencies": {

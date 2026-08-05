@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">QA Hacks icon</title>
+  <desc id="desc">A dark navy rounded square with a white Q and emerald quality check.</desc>
+  <rect width="512" height="512" rx="128" fill="#020617"/>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="none" stroke="#1E293B" stroke-width="8"/>
+  <path d="M132 126h103c71 0 121 49 121 119 0 41-17 76-48 98l51 56-58 51-57-65h-11c-72 0-123-50-123-121 0-80 55-138 132-138Zm103 68c-38 0-63 28-63 69 0 39 25 65 62 65h44l-29-34 48-41c-5-35-28-59-62-59Z" fill="#fff"/>
+  <path d="m309 342 44 44 86-111" fill="none" stroke="#10B981" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

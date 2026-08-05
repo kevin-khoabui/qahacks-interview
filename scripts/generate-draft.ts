@@ -35,6 +35,8 @@ type QueueTopic = {
 
 type ExistingQuestion = { slug: string; question: string; cluster: string | null };
 
+type JsonRecord = Record<string, unknown>;
+
 function readApiKey() {
   const key = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEYS?.split(",")[0]?.trim();
   if (!key) throw new Error("Missing GEMINI_API_KEY or GEMINI_API_KEYS.");
@@ -70,6 +72,63 @@ function extractJson(text: string) {
   return cleaned;
 }
 
+function asString(value: unknown) {
+  if (typeof value === "string") return value.trim();
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean).join("\n\n");
+  if (value == null) return "";
+  return String(value).trim();
+}
+
+function asStringArray(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.map((item) => asString(item)).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.map((item) => asString(item)).filter(Boolean);
+    } catch {
+      // Fall through to delimiter splitting.
+    }
+    return trimmed
+      .split(/\n+|\s*[;•]\s*|\s+-\s+/)
+      .map((item) => item.replace(/^\d+[.)]\s*/, "").trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function trimExcerpt(value: unknown) {
+  const text = asString(value).replace(/\s+/g, " ");
+  if (text.length <= 260) return text;
+  const shortened = text.slice(0, 257);
+  const lastBoundary = Math.max(shortened.lastIndexOf(". "), shortened.lastIndexOf("; "), shortened.lastIndexOf(", "), shortened.lastIndexOf(" "));
+  return `${shortened.slice(0, lastBoundary > 160 ? lastBoundary : 257).trimEnd()}...`;
+}
+
+function normalizeDraft(input: unknown): JsonRecord {
+  const value = input && typeof input === "object" && !Array.isArray(input) ? input as JsonRecord : {};
+  const rawTime = value.estimated_answer_time;
+  const parsedTime = typeof rawTime === "number" ? rawTime : Number.parseInt(asString(rawTime), 10);
+
+  return {
+    question: asString(value.question),
+    excerpt: trimExcerpt(value.excerpt),
+    short_answer: asString(value.short_answer),
+    expert_answer: asString(value.expert_answer),
+    speaking_blueprint: asString(value.speaking_blueprint),
+    common_mistakes: asStringArray(value.common_mistakes).slice(0, 6),
+    follow_up_questions: asStringArray(value.follow_up_questions).slice(0, 5),
+    interviewer_evaluates: asStringArray(value.interviewer_evaluates).slice(0, 6),
+    real_world_example: asString(value.real_world_example),
+    strong_signals: asStringArray(value.strong_signals).slice(0, 6),
+    related_questions: asStringArray(value.related_questions).slice(0, 6),
+    estimated_answer_time: Number.isFinite(parsedTime) ? Math.max(2, Math.min(8, Math.round(parsedTime))) : 3
+  };
+}
+
 function prompt(topic: QueueTopic) {
   return `You are a senior QA engineering leader and interview coach writing one original QAHacks Interview Library article.
 
@@ -88,6 +147,10 @@ Return one valid JSON object only with these exact keys: question, excerpt, shor
 
 JSON requirements:
 - Use double quotes for every key and string value.
+- excerpt must be one string between 80 and 240 characters.
+- speaking_blueprint must be one string, not an array.
+- common_mistakes, follow_up_questions, interviewer_evaluates, strong_signals, and related_questions must be arrays of strings.
+- estimated_answer_time must be an integer from 2 to 8, not a string.
 - Escape line breaks inside strings as \\n.
 - Do not include markdown fences, comments, trailing commas, or text outside the JSON object.
 
@@ -106,16 +169,17 @@ async function generateValidDraft(model: ReturnType<GoogleGenerativeAI["getGener
   let lastRaw = "";
   let lastError: unknown;
 
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     const instruction = attempt === 1
       ? prompt(topic)
-      : `${prompt(topic)}\n\nYour previous response was invalid JSON. Regenerate the full object from scratch. Pay special attention to escaping quotes and line breaks.`;
+      : `${prompt(topic)}\n\nThe previous response failed validation. Regenerate the full object from scratch and follow every JSON type and length requirement exactly.`;
 
     const result = await model.generateContent(instruction);
     lastRaw = result.response.text();
 
     try {
-      return DraftSchema.parse(JSON.parse(extractJson(lastRaw)));
+      const parsed = JSON.parse(extractJson(lastRaw));
+      return DraftSchema.parse(normalizeDraft(parsed));
     } catch (error) {
       lastError = error;
       console.warn(`Gemini JSON attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -123,7 +187,7 @@ async function generateValidDraft(model: ReturnType<GoogleGenerativeAI["getGener
   }
 
   const preview = lastRaw.replace(/\s+/g, " ").slice(0, 800);
-  throw new Error(`Gemini returned invalid structured content after 2 attempts. Raw preview: ${preview}. Last error: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
+  throw new Error(`Gemini returned invalid structured content after 3 attempts. Raw preview: ${preview}. Last error: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
 }
 
 async function main() {
@@ -161,8 +225,8 @@ async function main() {
     const model = new GoogleGenerativeAI(readApiKey()).getGenerativeModel({
       model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
       generationConfig: {
-        temperature: 0.2,
-        topP: 0.75,
+        temperature: 0.15,
+        topP: 0.7,
         maxOutputTokens: 12288,
         responseMimeType: "application/json"
       } as never

@@ -3,26 +3,86 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedQuestion } from "@/lib/db";
 
-export const dynamic="force-dynamic";
-function splitContent(value:string){return value.replace(/\\n/g,"\n").split(/\n{2,}/).map((x)=>x.trim()).filter(Boolean);}
-function parseBlueprint(value:string){return splitContent(value).map((item,index)=>{const match=item.match(/^\[([^\]]+)\]\s*(.*)$/s);return{label:match?.[1]??`Step ${index+1}`,text:match?.[2]?.trim()??item};});}
-export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const q=await getPublishedQuestion(slug);if(!q)return{title:"Question not found"};return{title:q.question,description:q.excerpt,alternates:{canonical:`/questions/${q.slug}`}};}
+export const dynamic = "force-dynamic";
 
-export default async function QuestionPage({params}:{params:Promise<{slug:string}>}){
-  const{slug}=await params;const question=await getPublishedQuestion(slug);if(!question)notFound();
-  const expertParagraphs=splitContent(question.expert_answer);const blueprint=parseBlueprint(question.speaking_blueprint);
-  return <main className="shell article"><article className="article-main">
-    <nav className="breadcrumbs" aria-label="Breadcrumb"><Link href="/">Interview library</Link><span>/</span><span>{question.role}</span><span>/</span><span>{question.category}</span></nav>
-    <header className="question-header"><div className="meta"><span className="pill">{question.level}</span><span className="pill">{question.role}</span>{question.technology&&<span className="pill">{question.technology}</span>}</div><h1>{question.question}</h1><p className="lead">{question.excerpt}</p><div className="question-facts"><div><span>Level</span><strong>{question.level}</strong></div><div><span>Answer time</span><strong>{question.estimated_answer_time} min</strong></div><div><span>Quality</span><strong>{question.quality_score}/100</strong></div></div></header>
-    <section className="answer-highlight" id="short-answer"><div className="section-label">Best concise answer</div><h2>Interview-ready answer</h2><p>{question.short_answer}</p></section>
-    {question.interviewer_evaluates.length>0&&<section className="content-section" id="interviewer-evaluates"><div className="section-label">Behind the question</div><h2>What the interviewer is evaluating</h2><div className="signal-grid">{question.interviewer_evaluates.map((x)=><div className="signal-item" key={x}>✓<span>{x}</span></div>)}</div></section>}
-    <section className="content-section" id="expert-answer"><div className="section-label">Deep reasoning</div><h2>Expert answer</h2><div className="prose">{expertParagraphs.map((p,i)=><p key={`${i}-${p.slice(0,24)}`}>{p}</p>)}</div></section>
-    {question.real_world_example&&<section className="content-section" id="example"><div className="section-label">Applied thinking</div><h2>Real-world example</h2><div className="example-card"><p>{question.real_world_example}</p></div></section>}
-    <section className="content-section" id="speaking-blueprint"><div className="section-label">How to structure your response</div><h2>Speaking blueprint</h2><div className="blueprint-grid">{blueprint.map((item,index)=><div className="blueprint-step" key={`${item.label}-${index}`}><div className="step-number">{String(index+1).padStart(2,"0")}</div><div><h3>{item.label}</h3><p>{item.text}</p></div></div>)}</div></section>
-    {question.strong_signals.length>0&&<section className="content-section" id="strong-signals"><div className="section-label">Senior-level indicators</div><h2>Strong answer signals</h2><div className="signal-grid">{question.strong_signals.map((x)=><div className="signal-item" key={x}>+</div>)}{question.strong_signals.map((x)=><div className="signal-text" key={`t-${x}`}>{x}</div>)}</div></section>}
-    <section className="content-section" id="common-mistakes"><div className="section-label">What weakens an answer</div><h2>Common mistakes</h2><div className="mistake-list">{question.common_mistakes.map((m,i)=><div className="mistake-item" key={m}><span>{i+1}</span><p>{m}</p></div>)}</div></section>
-    {question.follow_up_questions.length>0&&<section className="content-section" id="follow-ups"><div className="section-label">Prepare one level deeper</div><h2>Likely follow-up questions</h2><div className="follow-up-list">{question.follow_up_questions.map((x)=><div className="follow-up" key={x}><span>→</span><p>{x}</p></div>)}</div></section>}
-    {question.related_questions.length>0&&<section className="content-section" id="related"><div className="section-label">Continue learning</div><h2>Related interview questions</h2><div className="related-list">{question.related_questions.map((x)=><div className="related-item" key={x}>{x}</div>)}</div></section>}
-    <div className="article-end"><Link href="/#questions">← Browse more interview questions</Link></div>
-  </article><aside className="aside"><div className="aside-group"><strong>On this page</strong><a href="#short-answer">Interview-ready answer</a>{question.interviewer_evaluates.length>0&&<a href="#interviewer-evaluates">What is evaluated</a>}<a href="#expert-answer">Expert answer</a>{question.real_world_example&&<a href="#example">Real-world example</a>}<a href="#speaking-blueprint">Speaking blueprint</a><a href="#common-mistakes">Common mistakes</a>{question.follow_up_questions.length>0&&<a href="#follow-ups">Follow-up questions</a>}</div><div className="aside-card"><span>Question quality</span><strong>{question.quality_score}/100</strong><p>Curated for clarity, technical depth, and interview usefulness.</p></div></aside></main>;
+function splitContent(value: string) {
+  return value.replace(/\\n/g, "\n").split(/\n{2,}/).map((item) => item.trim()).filter(Boolean);
+}
+
+function parseBlueprint(value: string) {
+  return splitContent(value).map((item, index) => {
+    const match = item.match(/^\[([^\]]+)\]\s*(.*)$/s);
+    return { label: match?.[1] ?? `Step ${index + 1}`, text: match?.[2]?.trim() ?? item };
+  });
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const question = await getPublishedQuestion(slug);
+  if (!question) return { title: "Question not found" };
+  return { title: question.question, description: question.excerpt, alternates: { canonical: `/questions/${question.slug}` } };
+}
+
+export default async function QuestionPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const question = await getPublishedQuestion(slug);
+  if (!question) notFound();
+
+  const expertParagraphs = splitContent(question.expert_answer);
+  const blueprint = parseBlueprint(question.speaking_blueprint);
+
+  return (
+    <main className="shell article">
+      <article className="article-main">
+        <nav className="breadcrumbs" aria-label="Breadcrumb">
+          <Link href="/">Interview library</Link><span>/</span><span>{question.role}</span><span>/</span><span>{question.category}</span>
+        </nav>
+
+        <header className="question-header">
+          <div className="meta"><span className="pill">{question.level}</span><span className="pill">{question.role}</span>{question.technology && <span className="pill">{question.technology}</span>}</div>
+          <h1>{question.question}</h1>
+          <p className="lead">{question.excerpt}</p>
+          <div className="question-facts">
+            <div><span>Level</span><strong>{question.level}</strong></div>
+            <div><span>Answer time</span><strong>{question.estimated_answer_time} min</strong></div>
+            <div><span>Quality</span><strong>{question.quality_score}/100</strong></div>
+          </div>
+        </header>
+
+        <section className="answer-highlight" id="short-answer"><div className="section-label">Best concise answer</div><h2>Interview-ready answer</h2><p>{question.short_answer}</p></section>
+
+        {question.interviewer_evaluates.length > 0 && (
+          <section className="content-section" id="interviewer-evaluates">
+            <div className="section-label">Behind the question</div><h2>What the interviewer is evaluating</h2>
+            <div className="signal-grid">{question.interviewer_evaluates.map((item) => <div className="signal-item" key={item}><b>✓</b><span>{item}</span></div>)}</div>
+          </section>
+        )}
+
+        <section className="content-section" id="expert-answer"><div className="section-label">Deep reasoning</div><h2>Expert answer</h2><div className="prose">{expertParagraphs.map((paragraph, index) => <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>)}</div></section>
+
+        {question.real_world_example && (
+          <section className="content-section" id="example"><div className="section-label">Applied thinking</div><h2>Real-world example</h2><div className="example-card"><p>{question.real_world_example}</p></div></section>
+        )}
+
+        <section className="content-section" id="speaking-blueprint"><div className="section-label">How to structure your response</div><h2>Speaking blueprint</h2><div className="blueprint-grid">{blueprint.map((item, index) => <div className="blueprint-step" key={`${item.label}-${index}`}><div className="step-number">{String(index + 1).padStart(2, "0")}</div><div><h3>{item.label}</h3><p>{item.text}</p></div></div>)}</div></section>
+
+        {question.strong_signals.length > 0 && (
+          <section className="content-section" id="strong-signals"><div className="section-label">Senior-level indicators</div><h2>Strong answer signals</h2><div className="signal-grid">{question.strong_signals.map((item) => <div className="signal-item" key={item}><b>+</b><span>{item}</span></div>)}</div></section>
+        )}
+
+        <section className="content-section" id="common-mistakes"><div className="section-label">What weakens an answer</div><h2>Common mistakes</h2><div className="mistake-list">{question.common_mistakes.map((mistake, index) => <div className="mistake-item" key={mistake}><span>{index + 1}</span><p>{mistake}</p></div>)}</div></section>
+
+        {question.follow_up_questions.length > 0 && <section className="content-section" id="follow-ups"><div className="section-label">Prepare one level deeper</div><h2>Likely follow-up questions</h2><div className="follow-up-list">{question.follow_up_questions.map((item) => <div className="follow-up" key={item}><span>→</span><p>{item}</p></div>)}</div></section>}
+
+        {question.related_questions.length > 0 && <section className="content-section" id="related"><div className="section-label">Continue learning</div><h2>Related interview questions</h2><div className="related-list">{question.related_questions.map((item) => <div className="related-item" key={item}>{item}</div>)}</div></section>}
+
+        <div className="article-end"><Link href="/#questions">← Browse more interview questions</Link></div>
+      </article>
+
+      <aside className="aside">
+        <div className="aside-group"><strong>On this page</strong><a href="#short-answer">Interview-ready answer</a>{question.interviewer_evaluates.length > 0 && <a href="#interviewer-evaluates">What is evaluated</a>}<a href="#expert-answer">Expert answer</a>{question.real_world_example && <a href="#example">Real-world example</a>}<a href="#speaking-blueprint">Speaking blueprint</a>{question.strong_signals.length > 0 && <a href="#strong-signals">Strong answer signals</a>}<a href="#common-mistakes">Common mistakes</a>{question.follow_up_questions.length > 0 && <a href="#follow-ups">Follow-up questions</a>}</div>
+        <div className="aside-card"><span>Question quality</span><strong>{question.quality_score}/100</strong><p>Curated for clarity, technical depth, and interview usefulness.</p></div>
+      </aside>
+    </main>
+  );
 }

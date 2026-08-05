@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import "./brand.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://interview.qahacks.com"),

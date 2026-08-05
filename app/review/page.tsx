@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FormattedContent } from "@/components/formatted-content";
 import { getReviewQueue, isReviewAdmin } from "@/lib/review-admin";
 
 export const dynamic = "force-dynamic";
@@ -72,11 +73,11 @@ export default async function ReviewPage({
                   </div>
                 </div>
 
-                <section className="review-block review-highlight"><h3>Interview-ready answer</h3><p>{item.short_answer}</p></section>
-                <section className="review-block"><h3>Expert answer</h3><div className="review-prose">{item.expert_answer.split(/\n{2,}/).map((p) => <p key={p.slice(0, 40)}>{p}</p>)}</div></section>
+                <section className="review-block review-highlight"><h3>Interview-ready answer</h3><FormattedContent value={item.short_answer} /></section>
+                <section className="review-block"><h3>Expert answer</h3><FormattedContent value={item.expert_answer} className="review-prose formatted-content" /></section>
                 {renderList("What the interviewer evaluates", item.interviewer_evaluates)}
-                {item.real_world_example && <section className="review-block"><h3>Real-world example</h3><p>{item.real_world_example}</p></section>}
-                <section className="review-block"><h3>Speaking blueprint</h3><pre>{item.speaking_blueprint}</pre></section>
+                {item.real_world_example && <section className="review-block"><h3>Real-world example</h3><FormattedContent value={item.real_world_example} /></section>}
+                <section className="review-block"><h3>Speaking blueprint</h3><FormattedContent value={item.speaking_blueprint} className="formatted-content" /></section>
                 {renderList("Strong answer signals", item.strong_signals)}
                 {renderList("Common mistakes", item.common_mistakes)}
                 {renderList("Follow-up questions", item.follow_up_questions)}

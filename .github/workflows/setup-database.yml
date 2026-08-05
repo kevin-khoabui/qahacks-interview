@@ -1,0 +1,52 @@
+name: Setup QAHacks Interview Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Choose the remote D1 setup operation"
+        required: true
+        type: choice
+        options:
+          - migrate
+          - seed-questions
+          - seed-topics
+          - setup-all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qahacks-interview-database-setup
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Apply D1 migrations
+        if: inputs.operation == 'migrate' || inputs.operation == 'setup-all'
+        run: npm run db:migrate:remote
+
+      - name: Seed curated public questions
+        if: inputs.operation == 'seed-questions' || inputs.operation == 'setup-all'
+        run: npm run db:seed:remote
+
+      - name: Seed curated topic queue
+        if: inputs.operation == 'seed-topics' || inputs.operation == 'setup-all'
+        run: npm run db:topics:remote

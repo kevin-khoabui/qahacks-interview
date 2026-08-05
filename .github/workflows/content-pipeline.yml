@@ -16,9 +16,10 @@ on:
           - review-5
           - list-review-articles
           - inspect-by-slug
+          - apply-content-patch
           - publish-by-slug
       slug:
-        description: "Required for inspect-by-slug or publish-by-slug"
+        description: "Required for inspect, patch, or publish actions"
         required: false
         type: string
 
@@ -87,7 +88,7 @@ jobs:
         run: npm run list:review -- --remote --confirm
 
       - name: Validate slug input
-        if: inputs.action == 'inspect-by-slug' || inputs.action == 'publish-by-slug'
+        if: inputs.action == 'inspect-by-slug' || inputs.action == 'apply-content-patch' || inputs.action == 'publish-by-slug'
         shell: bash
         run: |
           if [ -z "${{ inputs.slug }}" ]; then
@@ -98,6 +99,10 @@ jobs:
       - name: Inspect reviewed article
         if: inputs.action == 'inspect-by-slug'
         run: npm run inspect:review -- --slug "${{ inputs.slug }}" --remote --confirm
+
+      - name: Apply curated content patch
+        if: inputs.action == 'apply-content-patch'
+        run: npm run patch:content -- --slug "${{ inputs.slug }}" --remote --confirm
 
       - name: Publish reviewed article
         if: inputs.action == 'publish-by-slug'

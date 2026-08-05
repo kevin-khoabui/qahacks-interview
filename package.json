@@ -15,6 +15,8 @@
     "db:seed:remote": "wrangler d1 execute qahacks-interview-db --remote --file=seed/001_initial_questions.sql",
     "db:topics:local": "wrangler d1 execute qahacks-interview-db --local --file=seed/002_topic_queue.sql",
     "db:topics:remote": "wrangler d1 execute qahacks-interview-db --remote --file=seed/002_topic_queue.sql",
+    "db:briefs:local": "wrangler d1 execute qahacks-interview-db --local --file=seed/003_topic_briefs_001_050.sql && wrangler d1 execute qahacks-interview-db --local --file=seed/004_topic_briefs_051_100.sql",
+    "db:briefs:remote": "wrangler d1 execute qahacks-interview-db --remote --file=seed/003_topic_briefs_001_050.sql && wrangler d1 execute qahacks-interview-db --remote --file=seed/004_topic_briefs_051_100.sql",
     "generate:draft": "tsx scripts/generate-draft.ts",
     "review:draft": "tsx scripts/review-draft.ts",
     "publish": "tsx scripts/publish-question.ts"

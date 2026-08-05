@@ -13,6 +13,7 @@ export type ReviewQueueItem = {
   common_mistakes: string[];
   follow_up_questions: string[];
   related_questions: string[];
+  estimated_answer_time: number;
   quality_score: number;
   reviewer_notes: Record<string, unknown> | null;
   reviewed_at: string | null;
@@ -60,7 +61,8 @@ export async function getReviewQueue(): Promise<ReviewQueueItem[]> {
   const result = await env.DB.prepare(
     `SELECT slug, question, excerpt, short_answer, expert_answer, speaking_blueprint,
             interviewer_evaluates, real_world_example, strong_signals, common_mistakes,
-            follow_up_questions, related_questions, quality_score, reviewer_notes, reviewed_at
+            follow_up_questions, related_questions, estimated_answer_time, quality_score,
+            reviewer_notes, reviewed_at
      FROM interview_questions
      WHERE status = 'review'
      ORDER BY reviewed_at DESC, quality_score DESC
@@ -80,6 +82,7 @@ export async function getReviewQueue(): Promise<ReviewQueueItem[]> {
     common_mistakes: parseArray(row.common_mistakes),
     follow_up_questions: parseArray(row.follow_up_questions),
     related_questions: parseArray(row.related_questions),
+    estimated_answer_time: Math.max(1, Number(row.estimated_answer_time ?? 2)),
     quality_score: Number(row.quality_score ?? 0),
     reviewer_notes: parseObject(row.reviewer_notes),
     reviewed_at: row.reviewed_at ? String(row.reviewed_at) : null

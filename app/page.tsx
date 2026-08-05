@@ -27,7 +27,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
       </section>
 
       <section className="shell discovery">
-        <form className="search search-compact" action="/" method="get">
+        <form className="search search-compact" action="/#questions" method="get">
           <span className="search-icon" aria-hidden="true">⌕</span>
           <input name="q" defaultValue={search} placeholder="Search Playwright, API testing, QA Lead..." aria-label="Search interview questions" />
           {role && <input type="hidden" name="role" value={role} />}
@@ -37,19 +37,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
         <nav className="filters" aria-label="Filter interview questions">
           {filters.map((item) => {
             const active = item === role;
-            const href = item ? `/?role=${encodeURIComponent(item)}${search ? `&q=${encodeURIComponent(search)}` : ""}` : search ? `/?q=${encodeURIComponent(search)}` : "/";
+            const query = item
+              ? `?role=${encodeURIComponent(item)}${search ? `&q=${encodeURIComponent(search)}` : ""}`
+              : search
+                ? `?q=${encodeURIComponent(search)}`
+                : "";
+            const href = `/${query}#questions`;
             return <Link className={active ? "filter active" : "filter"} href={href} key={item || "all"}>{item || "All questions"}</Link>;
           })}
         </nav>
       </section>
 
-      <section className="shell section question-library">
+      <section className="shell section question-library" id="questions">
         <div className="section-head">
           <div>
             <div className="eyebrow">Interview knowledge base</div>
             <h2>{search || role ? "Matching questions" : "Featured questions"}</h2>
           </div>
-          {(search || role) && <Link className="clear-link" href="/">Clear filters</Link>}
+          {(search || role) && <Link className="clear-link" href="/#questions">Clear filters</Link>}
         </div>
 
         {filtered.length === 0 ? (

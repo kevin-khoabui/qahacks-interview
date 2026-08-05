@@ -4,12 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "Generate one draft or review one draft"
+        description: "Choose a small, controlled content operation"
         required: true
         type: choice
         options:
-          - generate
-          - review
+          - generate-1
+          - generate-3
+          - generate-5
+          - review-1
+          - review-3
+          - review-5
 
 permissions:
   contents: read
@@ -33,21 +37,41 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate one safe draft
-        if: inputs.action == 'generate'
+      - name: Resolve batch size
+        id: batch
+        shell: bash
+        run: |
+          case "${{ inputs.action }}" in
+            *-5) echo "count=5" >> "$GITHUB_OUTPUT" ;;
+            *-3) echo "count=3" >> "$GITHUB_OUTPUT" ;;
+            *) echo "count=1" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Generate safe drafts
+        if: startsWith(inputs.action, 'generate-')
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npm run generate:draft -- --remote --confirm
+        shell: bash
+        run: |
+          for i in $(seq 1 "${{ steps.batch.outputs.count }}"); do
+            echo "Generating draft $i/${{ steps.batch.outputs.count }}"
+            npm run generate:draft -- --remote --confirm
+          done
 
-      - name: Review one draft
-        if: inputs.action == 'review'
+      - name: Review pending drafts
+        if: startsWith(inputs.action, 'review-')
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
           GEMINI_REVIEW_MODEL: ${{ vars.GEMINI_REVIEW_MODEL || 'gemini-2.5-flash' }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npm run review:draft -- --remote --confirm
+        shell: bash
+        run: |
+          for i in $(seq 1 "${{ steps.batch.outputs.count }}"); do
+            echo "Reviewing draft $i/${{ steps.batch.outputs.count }}"
+            npm run review:draft -- --remote --confirm
+          done
